@@ -22,7 +22,6 @@ class _registerScreenState extends State<registerScreen> {
   final FocusNode _focusNode2 = FocusNode();
   final FocusNode _focusNode3 = FocusNode();
   final FocusNode _focusNode4 = FocusNode();
-  final FocusNode _focusNode5 = FocusNode();
 
   var obscurePassword = true;
   final _formkey = GlobalKey<FormState>();

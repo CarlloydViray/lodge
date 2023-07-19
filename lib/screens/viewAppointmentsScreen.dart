@@ -67,6 +67,7 @@ class _appointmentsScreenState extends State<appointmentsScreen> {
                                 .format(timestampdate!);
 
                         String? id = appointmentMap['id'] as String?;
+                        String num = appointmentMap['guests'] as String;
 
                         return Padding(
                           padding: const EdgeInsets.all(2.0),
@@ -143,6 +144,14 @@ class _appointmentsScreenState extends State<appointmentsScreen> {
                                           style: const TextStyle(
                                               color: Colors.red),
                                         ),
+                                      ],
+                                    ),
+                                    Row(
+                                      mainAxisAlignment:
+                                          MainAxisAlignment.spaceBetween,
+                                      children: [
+                                        const Text('Number of guests:'),
+                                        Text(num),
                                       ],
                                     ),
                                   ],

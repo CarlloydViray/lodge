@@ -135,12 +135,14 @@ class _calendarScreenState extends State<calendarScreen> {
     final formKey = GlobalKey<FormState>();
     final nameKey = GlobalKey<FormFieldState<String>>();
     final phoneKey = GlobalKey<FormFieldState<String>>();
+    final numKey = GlobalKey<FormFieldState<String>>();
 
     DateTime? checkInDate;
     DateTime? checkOutDate;
     TextEditingController checkInDateController = TextEditingController();
     TextEditingController checkOutDateController = TextEditingController();
     TextEditingController subjectController = TextEditingController();
+    TextEditingController numGuestController = TextEditingController();
     TextEditingController phoneController = TextEditingController();
     TextEditingController reqController = TextEditingController();
 
@@ -170,6 +172,7 @@ class _calendarScreenState extends State<calendarScreen> {
                   'endTime': checkOutDate,
                   'startTime': checkInDate,
                   'subject': subjectController.text,
+                  'guests': numGuestController.text,
                   'id': id,
                   'phone': phoneController.text,
                   'requests': reqController.text,
@@ -293,6 +296,26 @@ class _calendarScreenState extends State<calendarScreen> {
                     ],
                   ),
                 ),
+              ),
+              const SizedBox(height: 12),
+              TextFormField(
+                key: numKey,
+                controller: numGuestController,
+                keyboardType: TextInputType.number,
+                decoration: const InputDecoration(
+                    labelText: 'Number of guests',
+                    border: OutlineInputBorder(),
+                    filled: true,
+                    fillColor: Colors.white,
+                    labelStyle: TextStyle(color: Colors.black),
+                    suffixIcon: Icon(Icons.numbers_outlined)),
+                validator: (value) {
+                  if (value == null || value.isEmpty) {
+                    return 'Please enter a name';
+                  }
+                  return null;
+                },
+                textCapitalization: TextCapitalization.words,
               ),
               const SizedBox(height: 12),
               TextField(

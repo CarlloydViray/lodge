@@ -3,6 +3,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 class appointmentDetailsScreen extends StatefulWidget {
   const appointmentDetailsScreen(
@@ -57,6 +58,7 @@ class _appointmentDetailsScreenState extends State<appointmentDetailsScreen> {
                         String id = appointmentData['id'];
                         String phone = appointmentData['phone'];
                         String req = appointmentData['requests'];
+                        String? num = appointmentData['guests'];
                         Timestamp timestamp = appointmentData['timestamp'];
 
                         DateTime timestampval = timestamp.toDate();
@@ -114,8 +116,36 @@ class _appointmentDetailsScreenState extends State<appointmentDetailsScreen> {
                                   ),
                                   const SizedBox(height: 4.0),
                                   Text(
-                                    'Phone: $phone',
+                                    'Number of guests: $num',
                                     style: const TextStyle(fontSize: 16.0),
+                                  ),
+                                  const SizedBox(height: 4.0),
+                                  InkWell(
+                                    onTap: () {
+                                      _launchPhone(phone);
+                                    },
+                                    child: RichText(
+                                      text: TextSpan(
+                                        text: 'Phone: ',
+                                        style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: Colors
+                                              .black, // Set the desired color for "Phone"
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: phone,
+                                            style: const TextStyle(
+                                              fontSize: 16.0,
+                                              decoration:
+                                                  TextDecoration.underline,
+                                              color: Colors.blue,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                   const SizedBox(height: 4.0),
                                   Text(
@@ -132,6 +162,7 @@ class _appointmentDetailsScreenState extends State<appointmentDetailsScreen> {
                                             unitName: widget.unitName,
                                             id: widget.id,
                                             subject: title,
+                                            num: num,
                                             phone: phone,
                                             req: req,
                                             checkin: startTimeValue,
@@ -167,5 +198,17 @@ class _appointmentDetailsScreenState extends State<appointmentDetailsScreen> {
             return const Center(child: Text('No appointments found'));
           },
         ));
+  }
+}
+
+void _launchPhone(String phoneNumber) async {
+  if (phoneNumber.isNotEmpty) {
+    final Uri url = Uri.parse('tel:$phoneNumber');
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }

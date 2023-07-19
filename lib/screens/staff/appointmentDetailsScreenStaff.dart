@@ -2,6 +2,7 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
+import 'package:url_launcher/url_launcher.dart';
 
 import 'appointmentDetailsEditScreenStaff.dart';
 
@@ -69,6 +70,7 @@ class _appointmentDetailsScreenStaffState
                         DateTime endTimeValue =
                             endTime?.toDate() ?? DateTime.now();
 
+                        String? num = appointmentData['guests'];
                         String dateTextCheckIn =
                             DateFormat('MMMM dd, yyyy').format(startTimeValue);
                         String dateTextCheckOut =
@@ -117,8 +119,36 @@ class _appointmentDetailsScreenStaffState
                                   ),
                                   const SizedBox(height: 4.0),
                                   Text(
-                                    'Phone: $phone',
+                                    'Number of guests: $num',
                                     style: const TextStyle(fontSize: 16.0),
+                                  ),
+                                  const SizedBox(height: 4.0),
+                                  InkWell(
+                                    onTap: () {
+                                      _launchPhone(phone);
+                                    },
+                                    child: RichText(
+                                      text: TextSpan(
+                                        text: 'Phone: ',
+                                        style: const TextStyle(
+                                          fontSize: 16.0,
+                                          color: Colors
+                                              .black, // Set the desired color for "Phone"
+                                        ),
+                                        children: [
+                                          TextSpan(
+                                            text: phone,
+                                            style: const TextStyle(
+                                              fontSize: 16.0,
+                                              decoration:
+                                                  TextDecoration.underline,
+                                              color: Colors.blue,
+                                              fontWeight: FontWeight.bold,
+                                            ),
+                                          ),
+                                        ],
+                                      ),
+                                    ),
                                   ),
                                   const SizedBox(height: 4.0),
                                   Text(
@@ -136,6 +166,7 @@ class _appointmentDetailsScreenStaffState
                                             id: widget.id,
                                             subject: title,
                                             phone: phone,
+                                            num: num,
                                             req: req,
                                             checkin: startTimeValue,
                                             checkout: endTimeValue,
@@ -170,5 +201,17 @@ class _appointmentDetailsScreenStaffState
             return const Center(child: Text('No appointments found'));
           },
         ));
+  }
+}
+
+void _launchPhone(String phoneNumber) async {
+  if (phoneNumber.isNotEmpty) {
+    final Uri url = Uri.parse('tel:$phoneNumber');
+
+    if (await canLaunchUrl(url)) {
+      await launchUrl(url);
+    } else {
+      throw 'Could not launch $url';
+    }
   }
 }

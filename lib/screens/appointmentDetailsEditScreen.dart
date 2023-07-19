@@ -9,6 +9,7 @@ class appointmentDetailsEditScreen extends StatefulWidget {
       required this.unitName,
       required this.id,
       required this.subject,
+      required this.num,
       required this.phone,
       required this.req,
       required this.checkin,
@@ -18,6 +19,7 @@ class appointmentDetailsEditScreen extends StatefulWidget {
   final unitName;
   final id;
   final subject;
+  final num;
   final phone;
   final req;
   final checkin;
@@ -32,10 +34,14 @@ class appointmentDetailsEditScreen extends StatefulWidget {
 class _appointmentDetailsEditScreenState
     extends State<appointmentDetailsEditScreen> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final numKey = GlobalKey<FormFieldState<String>>();
+  final nameKey = GlobalKey<FormFieldState<String>>();
   TextEditingController idController = TextEditingController();
   TextEditingController titleController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
   TextEditingController reqController = TextEditingController();
+  TextEditingController numContoller = TextEditingController();
+
   @override
   void initState() {
     // TODO: implement initState
@@ -45,6 +51,7 @@ class _appointmentDetailsEditScreenState
       titleController.text = widget.subject;
       phoneController.text = widget.phone;
       reqController.text = widget.req;
+      numContoller.text = widget.num;
     });
   }
 
@@ -83,6 +90,7 @@ class _appointmentDetailsEditScreenState
                     ),
                     const SizedBox(height: 12.0),
                     TextFormField(
+                      key: nameKey,
                       controller: titleController,
                       textCapitalization: TextCapitalization.words,
                       style: const TextStyle(fontSize: 16.0),
@@ -96,6 +104,26 @@ class _appointmentDetailsEditScreenState
                       validator: (value) {
                         if (value!.isEmpty) {
                           return 'Please enter a name.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12.0),
+                    TextFormField(
+                      key: numKey,
+                      controller: numContoller,
+                      keyboardType: TextInputType.number,
+                      style: const TextStyle(fontSize: 16.0),
+                      decoration: const InputDecoration(
+                        labelText: 'Number of Guests',
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.white,
+                        labelStyle: TextStyle(color: Colors.black),
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please enter a number of guests.';
                         }
                         return null;
                       },
@@ -152,6 +180,7 @@ class _appointmentDetailsEditScreenState
                             'startTime': widget.checkin,
                             'endTime': widget.checkout,
                             'subject': titleController.text,
+                            'guests': numContoller.text,
                             'phone': phoneController.text,
                             'requests': reqController.text,
                             'id': widget.id

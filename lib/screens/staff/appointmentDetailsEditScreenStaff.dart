@@ -8,6 +8,7 @@ class appointmentDetailsEditScreenStaff extends StatefulWidget {
       required this.unitName,
       required this.id,
       required this.subject,
+      required this.num,
       required this.phone,
       required this.req,
       required this.checkin,
@@ -17,6 +18,7 @@ class appointmentDetailsEditScreenStaff extends StatefulWidget {
   final unitName;
   final id;
   final subject;
+  final num;
   final phone;
   final req;
   final checkin;
@@ -31,10 +33,13 @@ class appointmentDetailsEditScreenStaff extends StatefulWidget {
 class _appointmentDetailsEditScreenStaffState
     extends State<appointmentDetailsEditScreenStaff> {
   final GlobalKey<FormState> _formKey = GlobalKey<FormState>();
+  final numKey = GlobalKey<FormFieldState<String>>();
+  final nameKey = GlobalKey<FormFieldState<String>>();
   TextEditingController idController = TextEditingController();
   TextEditingController titleController = TextEditingController();
   TextEditingController phoneController = TextEditingController();
   TextEditingController reqController = TextEditingController();
+  TextEditingController numContoller = TextEditingController();
   @override
   void initState() {
     // TODO: implement initState
@@ -44,6 +49,7 @@ class _appointmentDetailsEditScreenStaffState
       titleController.text = widget.subject;
       phoneController.text = widget.phone;
       reqController.text = widget.req;
+      numContoller.text = widget.num;
     });
   }
 
@@ -82,8 +88,10 @@ class _appointmentDetailsEditScreenStaffState
                     ),
                     const SizedBox(height: 12.0),
                     TextFormField(
+                      key: nameKey,
                       readOnly: true,
                       controller: titleController,
+                      textCapitalization: TextCapitalization.words,
                       style: const TextStyle(fontSize: 16.0),
                       decoration: const InputDecoration(
                         labelText: 'Name',
@@ -101,9 +109,30 @@ class _appointmentDetailsEditScreenStaffState
                     ),
                     const SizedBox(height: 12.0),
                     TextFormField(
-                      readOnly: true,
-                      controller: phoneController,
+                      key: numKey,
+                      controller: numContoller,
+                      keyboardType: TextInputType.number,
                       style: const TextStyle(fontSize: 16.0),
+                      decoration: const InputDecoration(
+                        labelText: 'Number of Guests',
+                        border: OutlineInputBorder(),
+                        filled: true,
+                        fillColor: Colors.white,
+                        labelStyle: TextStyle(color: Colors.black),
+                      ),
+                      validator: (value) {
+                        if (value!.isEmpty) {
+                          return 'Please enter a number of guests.';
+                        }
+                        return null;
+                      },
+                    ),
+                    const SizedBox(height: 12.0),
+                    TextFormField(
+                      controller: phoneController,
+                      keyboardType: TextInputType.phone,
+                      style: const TextStyle(fontSize: 16.0),
+                      readOnly: true,
                       decoration: const InputDecoration(
                         labelText: 'Phone',
                         border: OutlineInputBorder(),
@@ -115,6 +144,7 @@ class _appointmentDetailsEditScreenStaffState
                     const SizedBox(height: 12.0),
                     TextFormField(
                       controller: reqController,
+                      textCapitalization: TextCapitalization.sentences,
                       maxLines: 2,
                       style: const TextStyle(fontSize: 16.0),
                       decoration: const InputDecoration(
@@ -150,6 +180,7 @@ class _appointmentDetailsEditScreenStaffState
                             'startTime': widget.checkin,
                             'endTime': widget.checkout,
                             'subject': titleController.text,
+                            'guests': numContoller.text,
                             'phone': phoneController.text,
                             'requests': reqController.text,
                             'id': widget.id
