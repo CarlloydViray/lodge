@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "480859115473",
+    "project_id": "airbnb-7bd6f",
+    "storage_bucket": "airbnb-7bd6f.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:480859115473:android:8c8c73fffc8ee75d1b9af0",
+        "android_client_info": {
+          "package_name": "com.example.airbnb_scheduler"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "480859115473-4uu4biluop8m3d5hdmbfk2oa2f1gd5c9.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAYKUXXzk77fggYM48EEAwK2g39x-aVm2o"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "480859115473-4uu4biluop8m3d5hdmbfk2oa2f1gd5c9.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
