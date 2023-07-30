@@ -147,6 +147,7 @@ class _calendarScreenState extends State<calendarScreen> {
     TextEditingController reqController = TextEditingController();
 
     AwesomeDialog(
+      dismissOnTouchOutside: false,
       context: context,
       dialogType: DialogType.info,
       animType: AnimType.bottomSlide,

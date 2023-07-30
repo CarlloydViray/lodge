@@ -2,6 +2,7 @@ import 'package:airbnb_scheduler/screens/appointmentDetailsEditScreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
 import 'package:url_launcher/url_launcher.dart';
 
@@ -120,9 +121,18 @@ class _appointmentDetailsScreenState extends State<appointmentDetailsScreen> {
                                     style: const TextStyle(fontSize: 16.0),
                                   ),
                                   const SizedBox(height: 4.0),
-                                  InkWell(
+                                  GestureDetector(
                                     onTap: () {
-                                      _launchPhone(phone);
+                                      _launchPhone(
+                                          phone); // Function to launch the phone dialer (as in your original code)
+                                    },
+                                    onLongPress: () {
+                                      _copyToClipboard(
+                                          phone); // Function to copy the phone number to clipboard
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(const SnackBar(
+                                              content: Text(
+                                                  'Phone number copied to clipboard')));
                                     },
                                     child: RichText(
                                       text: TextSpan(
@@ -198,6 +208,10 @@ class _appointmentDetailsScreenState extends State<appointmentDetailsScreen> {
             return const Center(child: Text('No appointments found'));
           },
         ));
+  }
+
+  void _copyToClipboard(String text) {
+    Clipboard.setData(ClipboardData(text: text));
   }
 }
 

@@ -18,161 +18,209 @@ class _appointmentsScreenState extends State<appointmentsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-        appBar: AppBar(
-          title: Text(widget.unitName),
-        ),
-        body: StreamBuilder<DocumentSnapshot>(
-          stream: FirebaseFirestore.instance
-              .collection('units')
-              .doc(widget.unitName)
-              .snapshots(),
-          builder: (context, snapshot) {
-            if (snapshot.hasData) {
-              Map<String, dynamic>? documentData =
-                  snapshot.data?.data() as Map<String, dynamic>?;
+      appBar: AppBar(
+        title: Text(widget.unitName),
+      ),
+      body: StreamBuilder<DocumentSnapshot>(
+        stream: FirebaseFirestore.instance
+            .collection('units')
+            .doc(widget.unitName)
+            .snapshots(),
+        builder: (context, snapshot) {
+          if (snapshot.hasData) {
+            Map<String, dynamic>? documentData =
+                snapshot.data?.data() as Map<String, dynamic>?;
 
-              if (documentData != null) {
-                List<dynamic>? appointmentsArray =
-                    documentData['appointments'] as List<dynamic>?;
+            if (documentData != null) {
+              List<dynamic>? appointmentsArray =
+                  documentData['appointments'] as List<dynamic>?;
 
-                if (appointmentsArray != null) {
-                  appointmentsArray.sort((a, b) {
-                    Timestamp? startTimeA = a['timestamp'] as Timestamp?;
-                    Timestamp? startTimeB = b['timestamp'] as Timestamp?;
-                    DateTime? startDateA = startTimeA?.toDate();
-                    DateTime? startDateB = startTimeB?.toDate();
-                    return startDateB!.compareTo(startDateA!);
-                  });
+              if (appointmentsArray != null) {
+                final now = DateTime.now();
+                List<Map<String, dynamic>> todayAppointments = [];
+                List<Map<String, dynamic>> doneAppointments = [];
 
-                  return ListView.builder(
-                    itemCount: appointmentsArray.length,
-                    itemBuilder: (context, index) {
-                      Map<String, dynamic>? appointmentMap =
-                          appointmentsArray[index] as Map<String, dynamic>?;
+                for (Map<String, dynamic> appointmentMap in appointmentsArray) {
+                  Timestamp? startTime =
+                      appointmentMap['startTime'] as Timestamp?;
 
-                      if (appointmentMap != null) {
-                        String? subject = appointmentMap['subject'] as String?;
-                        Timestamp? startTime =
-                            appointmentMap['startTime'] as Timestamp?;
-                        Timestamp? timestamp =
-                            appointmentMap['timestamp'] as Timestamp?;
+                  DateTime? startDate = startTime?.toDate();
 
-                        DateTime? startDate = startTime?.toDate();
-                        DateTime? timestampdate = timestamp?.toDate();
+                  if (startDate != null) {
+                    if (startDate.isAfter(now) || isSameDay(startDate, now)) {
+                      todayAppointments.add(appointmentMap);
+                    } else {
+                      doneAppointments.add(appointmentMap);
+                    }
+                  }
+                }
 
-                        String dateTextCheckIn =
-                            DateFormat('MMMM dd, yyyy').format(startDate!);
-                        String timestampformat =
-                            DateFormat('MMMM dd, yyyy hh:mm a')
-                                .format(timestampdate!);
+                todayAppointments.sort((a, b) {
+                  Timestamp? startTimeA = a['startTime'] as Timestamp?;
+                  Timestamp? startTimeB = b['startTime'] as Timestamp?;
+                  DateTime? startDateA = startTimeA?.toDate();
+                  DateTime? startDateB = startTimeB?.toDate();
+                  return startDateA!.compareTo(startDateB!);
+                });
 
-                        String? id = appointmentMap['id'] as String?;
-                        String num = appointmentMap['guests'] as String;
+                doneAppointments.sort((a, b) {
+                  Timestamp? startTimeA = a['startTime'] as Timestamp?;
+                  Timestamp? startTimeB = b['startTime'] as Timestamp?;
+                  DateTime? startDateA = startTimeA?.toDate();
+                  DateTime? startDateB = startTimeB?.toDate();
+                  return startDateB!.compareTo(startDateA!);
+                });
 
-                        return Padding(
-                          padding: const EdgeInsets.all(2.0),
-                          child: Card(
-                            elevation: 20,
-                            shadowColor: const Color(0xff4E6C50),
-                            child: InkWell(
-                              onTap: () {
-                                Navigator.push(
-                                  context,
-                                  CupertinoPageRoute(builder: (context) {
-                                    return appointmentDetailsScreen(
-                                        unitName: widget.unitName, id: id);
-                                  }),
-                                );
-                                print(id);
+                // Concatenate today's appointments with future appointments
+                List<Map<String, dynamic>> allAppointments = [
+                  ...todayAppointments,
+                  ...doneAppointments
+                ];
+
+                return ListView.builder(
+                  itemCount: allAppointments.length,
+                  itemBuilder: (context, index) {
+                    Map<String, dynamic>? appointmentMap =
+                        allAppointments[index];
+
+                    String? subject = appointmentMap['subject'] as String?;
+                    Timestamp? startTime =
+                        appointmentMap['startTime'] as Timestamp?;
+                    Timestamp? endTime =
+                        appointmentMap['endTime'] as Timestamp?;
+
+                    DateTime? startDate = startTime?.toDate();
+                    DateTime? endDate = endTime?.toDate();
+
+                    String dateTextCheckIn =
+                        DateFormat('MMMM dd, yyyy').format(startDate!);
+                    String dateTextCheckOut =
+                        DateFormat('MMMM dd, yyyy').format(endDate!);
+
+                    String? id = appointmentMap['id'] as String?;
+                    String num = appointmentMap['guests'].toString();
+
+                    bool isCompleted = endDate.isBefore(now);
+
+                    return Padding(
+                      padding: const EdgeInsets.all(2.0),
+                      child: Card(
+                        elevation: 20,
+                        shadowColor: const Color(0xff4E6C50),
+                        child: InkWell(
+                          onTap: () {
+                            Navigator.push(
+                              context,
+                              CupertinoPageRoute(builder: (context) {
+                                return appointmentDetailsScreen(
+                                    unitName: widget.unitName, id: id);
+                              }),
+                            );
+                            print(id);
+                          },
+                          onLongPress: () {
+                            QuickAlert.show(
+                              context: context,
+                              type: QuickAlertType.warning,
+                              title: 'Delete Booking?',
+                              showCancelBtn: true,
+                              confirmBtnText: 'Delete',
+                              onCancelBtnTap: () {
+                                Navigator.pop(context);
                               },
-                              onLongPress: () {
-                                QuickAlert.show(
-                                  context: context,
-                                  type: QuickAlertType.warning,
-                                  title: 'Delete Booking?',
-                                  showCancelBtn: true,
-                                  confirmBtnText: 'Delete',
-                                  onCancelBtnTap: () {
-                                    Navigator.pop(context);
-                                  },
-                                  onConfirmBtnTap: () {
-                                    print("Deleting appointment with ID: $id");
-                                    appointmentsArray.removeAt(index);
-                                    FirebaseFirestore.instance
-                                        .collection('units')
-                                        .doc(widget.unitName)
-                                        .update({
-                                      'appointments': appointmentsArray
-                                    }).then((value) {
-                                      print('Appointment deleted successfully');
-                                      Navigator.pop(context);
-                                      QuickAlert.show(
-                                          context: context,
-                                          type: QuickAlertType.success,
-                                          title: 'Booking Deleted');
-                                    }).catchError((error) {
-                                      print(
-                                          'Failed to delete appointment: $error');
-                                    });
-                                  },
-                                );
+                              onConfirmBtnTap: () {
+                                print("Deleting appointment with ID: $id");
+                                allAppointments.removeAt(index);
+                                FirebaseFirestore.instance
+                                    .collection('units')
+                                    .doc(widget.unitName)
+                                    .update({
+                                  'appointments': allAppointments
+                                }).then((value) {
+                                  print('Appointment deleted successfully');
+                                  Navigator.pop(context);
+                                  QuickAlert.show(
+                                      context: context,
+                                      type: QuickAlertType.success,
+                                      title: 'Booking Deleted');
+                                }).catchError((error) {
+                                  print('Failed to delete appointment: $error');
+                                });
                               },
-                              child: ListTile(
-                                title: Text(
+                            );
+                          },
+                          child: ListTile(
+                            title: Row(
+                              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                              children: [
+                                Text(
                                   subject ?? '',
                                   style: const TextStyle(
                                       fontSize: 25,
                                       fontWeight: FontWeight.bold),
                                 ),
-                                subtitle: Column(
+                                if (isCompleted)
+                                  const Icon(
+                                    Icons.check_circle,
+                                    color: Colors.green,
+                                    size: 20,
+                                  ), // Checkmark icon for completed appointments
+                              ],
+                            ),
+                            subtitle: Column(
+                              children: [
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
                                   children: [
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text('Booking created at:'),
-                                        Text(timestampformat),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text('Check-in at:'),
-                                        Text(
-                                          dateTextCheckIn,
-                                          style: const TextStyle(
-                                              color: Colors.red),
-                                        ),
-                                      ],
-                                    ),
-                                    Row(
-                                      mainAxisAlignment:
-                                          MainAxisAlignment.spaceBetween,
-                                      children: [
-                                        const Text('Number of guests:'),
-                                        Text(num),
-                                      ],
+                                    const Text('Check-in at:'),
+                                    Text(
+                                      dateTextCheckIn,
+                                      style:
+                                          const TextStyle(color: Colors.green),
                                     ),
                                   ],
                                 ),
-                              ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Check-out at:'),
+                                    Text(
+                                      dateTextCheckOut,
+                                      style: const TextStyle(color: Colors.red),
+                                    ),
+                                  ],
+                                ),
+                                Row(
+                                  mainAxisAlignment:
+                                      MainAxisAlignment.spaceBetween,
+                                  children: [
+                                    const Text('Number of guests:'),
+                                    Text(num),
+                                  ],
+                                ),
+                              ],
                             ),
                           ),
-                        );
-                      }
-
-                      return const ListTile(
-                        title: Text('Invalid appointment'),
-                      );
-                    },
-                  );
-                }
+                        ),
+                      ),
+                    );
+                  },
+                );
               }
             }
+          }
 
-            return const Center(child: Text('No Bookings available'));
-          },
-        ));
+          return const Center(child: Text('No Bookings available'));
+        },
+      ),
+    );
+  }
+
+  bool isSameDay(DateTime date1, DateTime date2) {
+    return date1.year == date2.year &&
+        date1.month == date2.month &&
+        date1.day == date2.day;
   }
 }
