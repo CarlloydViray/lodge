@@ -1,13 +1,19 @@
+import 'dart:convert';
 import 'package:airbnb_scheduler/models/calendarDataSource.dart';
 import 'package:airbnb_scheduler/screens/viewAppointmentsScreen.dart';
 import 'package:awesome_dialog/awesome_dialog.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter/services.dart';
+import 'package:googleapis_auth/auth_io.dart';
 import 'package:quickalert/quickalert.dart';
 import 'package:syncfusion_flutter_calendar/calendar.dart';
 import 'package:intl/intl.dart';
 import 'dart:math';
+import "package:http/http.dart" as http;
+import 'package:googleapis_auth/auth_io.dart' as auth;
+import 'package:flutter/services.dart' show rootBundle;
 
 class calendarScreen extends StatefulWidget {
   const calendarScreen({super.key, required this.unitName});
@@ -60,6 +66,111 @@ class _calendarScreenState extends State<calendarScreen> {
 
       return sfAppointments;
     });
+  }
+
+  // Use service account credentials to obtain oauth credentials.
+  Future<String> obtainCredentials() async {
+    final keyFileData =
+        await rootBundle.loadString('assets/service-account.json');
+    final keyFile =
+        ServiceAccountCredentials.fromJson(json.decode(keyFileData));
+
+    final scopes = ['https://www.googleapis.com/auth/firebase.messaging'];
+
+    final client = await auth.clientViaServiceAccount(keyFile, scopes);
+    final accessToken = client.credentials.accessToken.data;
+
+    return accessToken;
+  }
+
+// Get all tokens
+  Future<List<String>> getAllDeviceTokens() async {
+    try {
+      QuerySnapshot<Map<String, dynamic>> tokensSnapshot =
+          await FirebaseFirestore.instance.collection("UserTokens").get();
+
+      List<String> tokens = [];
+
+      for (QueryDocumentSnapshot<Map<String, dynamic>> doc
+          in tokensSnapshot.docs) {
+        // Check if the 'deviceTokens' field exists and is not null
+        dynamic data = doc.data();
+        if (data != null && data['deviceTokens'] != null) {
+          List<String> userTokens = List<String>.from(data['deviceTokens']);
+          tokens.addAll(userTokens);
+        }
+      }
+
+      return tokens;
+    } catch (e) {
+      print('Error getting all device tokens: $e');
+      return [];
+    }
+  }
+
+  //push notif
+  void sendPushNotification(String body, String title) async {
+    try {
+      // Obtain FCM credentials
+      final result = await obtainCredentials();
+
+      if (result == null) {
+        // Handle the case where obtaining credentials failed
+        print('Failed to obtain FCM credentials');
+        return;
+      }
+
+      // Get all device tokens from Firestore
+      List<String> tokens = await getAllDeviceTokens();
+
+      // Define your FCM server endpoint and authorization header
+      const String fcmEndpoint =
+          'https://fcm.googleapis.com/v1/projects/airbnb-7bd6f/messages:send';
+      String authorizationHeader = 'Bearer $result';
+
+      // Send notification to each device token
+      for (String token in tokens) {
+        try {
+          final response = await http.post(
+            Uri.parse(fcmEndpoint),
+            headers: <String, String>{
+              'Content-Type': 'application/json',
+              'Authorization': authorizationHeader,
+            },
+            body: jsonEncode(
+              <String, dynamic>{
+                'message': {
+                  'token': token,
+                  'notification': {
+                    'title': title,
+                    'body': body,
+                  },
+                  'data': <String, dynamic>{
+                    'click_action': 'FLUTTER_NOTIFICATION_CLICK',
+                    'status': 'done',
+                    'body': body,
+                    'title': title,
+                  },
+                },
+              },
+            ),
+          );
+
+          // Handle the response as needed
+          if (response.statusCode == 200) {
+            print('Notification sent successfully to token: $token');
+          } else {
+            print(
+                'Error sending push notification to token: $token. Status code: ${response.statusCode}');
+            print('Response body: ${response.body}');
+          }
+        } catch (e) {
+          print('Error sending push notification: $e');
+        }
+      }
+    } catch (e) {
+      print('Error sending push notification: $e');
+    }
   }
 
   @override
@@ -159,6 +270,10 @@ class _calendarScreenState extends State<calendarScreen> {
                 .collection('units')
                 .doc(widget.unitName);
 
+            DocumentReference unitRefLOGS = FirebaseFirestore.instance
+                .collection('logs')
+                .doc(widget.unitName);
+
             String generateRandomID() {
               Random random = Random();
               int randomNumber = random.nextInt(900000) + 100000;
@@ -181,6 +296,33 @@ class _calendarScreenState extends State<calendarScreen> {
                 }
               ])
             });
+
+            await unitRefLOGS.update({
+              'appointments': FieldValue.arrayUnion([
+                {
+                  'unit': widget.unitName,
+                  'action': "Added",
+                  'endTime': checkOutDate,
+                  'startTime': checkInDate,
+                  'subject': subjectController.text,
+                  'guests': numGuestController.text,
+                  'id': id,
+                  'timestamp': DateTime.now()
+                }
+              ])
+            });
+
+            String dateTextCheckIn =
+                DateFormat('MMMM dd, yyyy').format(checkInDate!);
+            String dateTextCheckOut =
+                DateFormat('MMMM dd, yyyy').format(checkOutDate!);
+
+            String body =
+                "Guest: ${subjectController.text} | Check-in: $dateTextCheckIn | Check-out: $dateTextCheckOut";
+
+            String title = "NEW BOOKING in ${widget.unitName}";
+
+            sendPushNotification(body, title);
 
             QuickAlert.show(
                 context: context,
