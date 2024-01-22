@@ -46,6 +46,10 @@ class _appointmentDetailsEditScreenState
   TextEditingController phoneController = TextEditingController();
   TextEditingController reqController = TextEditingController();
   TextEditingController numContoller = TextEditingController();
+  DateTime? checkInDate;
+  DateTime? checkOutDate;
+  TextEditingController checkInDateController = TextEditingController();
+  TextEditingController checkOutDateController = TextEditingController();
 
   @override
   void initState() {
@@ -57,6 +61,13 @@ class _appointmentDetailsEditScreenState
       phoneController.text = widget.phone;
       reqController.text = widget.req;
       numContoller.text = widget.num;
+      if (widget.checkin is DateTime) {
+        checkInDateController.text = formatDate(widget.checkin);
+      }
+
+      if (widget.checkout is DateTime) {
+        checkOutDateController.text = formatDate(widget.checkout);
+      }
     });
   }
 
@@ -219,6 +230,74 @@ class _appointmentDetailsEditScreenState
                       },
                     ),
                     const SizedBox(height: 12.0),
+                    Card(
+                      elevation: 12,
+                      child: Padding(
+                        padding: const EdgeInsets.all(8.0),
+                        child: Column(
+                          children: [
+                            TextField(
+                              controller: checkInDateController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                  labelText: 'Check-in Date',
+                                  border: OutlineInputBorder(),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  labelStyle: TextStyle(color: Colors.black),
+                                  suffixIcon: Icon(Icons.date_range)),
+                            ),
+                            const SizedBox(height: 12),
+                            TextField(
+                              controller: checkOutDateController,
+                              readOnly: true,
+                              decoration: const InputDecoration(
+                                  labelText: 'Check-out Date',
+                                  border: OutlineInputBorder(),
+                                  filled: true,
+                                  fillColor: Colors.white,
+                                  labelStyle: TextStyle(color: Colors.black),
+                                  suffixIcon: Icon(Icons.date_range)),
+                            ),
+                            const SizedBox(
+                              height: 12,
+                            ),
+                            ElevatedButton(
+                                style: ElevatedButton.styleFrom(
+                                    backgroundColor: const Color(0xff820000),
+                                    shape: RoundedRectangleBorder(
+                                        borderRadius:
+                                            BorderRadius.circular(18))),
+                                onPressed: () async {
+                                  DateTimeRange datetime = DateTimeRange(
+                                      start: DateTime.now(),
+                                      end: DateTime.now()
+                                          .add(const Duration(days: 1)));
+                                  final newDateRange =
+                                      await showDateRangePicker(
+                                          context: context,
+                                          initialDateRange: datetime,
+                                          firstDate: DateTime(1900),
+                                          lastDate: DateTime(2100));
+
+                                  if (newDateRange != null) {
+                                    setState(() {
+                                      checkInDate = newDateRange.start;
+                                      checkInDateController.text =
+                                          formatDate(newDateRange.start);
+
+                                      checkOutDate = newDateRange.end;
+                                      checkOutDateController.text =
+                                          formatDate(newDateRange.end);
+                                    });
+                                  }
+                                },
+                                child: const Text('Add Booking Schedule')),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(height: 12.0),
                     TextFormField(
                       key: numKey,
                       controller: numContoller,
@@ -287,8 +366,8 @@ class _appointmentDetailsEditScreenState
 
                           Map<String, dynamic> updatedData = {
                             'timestamp': widget.timestamp,
-                            'startTime': widget.checkin,
-                            'endTime': widget.checkout,
+                            'startTime': checkInDate,
+                            'endTime': checkOutDate,
                             'subject': titleController.text,
                             'guests': numContoller.text,
                             'phone': phoneController.text,
@@ -306,8 +385,8 @@ class _appointmentDetailsEditScreenState
                               {
                                 'unit': widget.unitName,
                                 'action': "Edited",
-                                'endTime': widget.checkout,
-                                'startTime': widget.checkin,
+                                'endTime': checkInDate,
+                                'startTime': checkOutDate,
                                 'subject': titleController.text,
                                 'guests': numContoller.text,
                                 'id': widget.id,
@@ -340,10 +419,10 @@ class _appointmentDetailsEditScreenState
                             title: 'Booking Info Updated',
                           );
 
-                          String dateTextCheckIn = DateFormat('MMMM dd, yyyy')
-                              .format(widget.checkin!);
-                          String dateTextCheckOut = DateFormat('MMMM dd, yyyy')
-                              .format(widget.checkout!);
+                          String dateTextCheckIn =
+                              DateFormat('MMMM dd, yyyy').format(checkInDate!);
+                          String dateTextCheckOut =
+                              DateFormat('MMMM dd, yyyy').format(checkOutDate!);
 
                           String body =
                               "Guest: ${titleController.text} | Check-in: $dateTextCheckIn | Check-out: $dateTextCheckOut";

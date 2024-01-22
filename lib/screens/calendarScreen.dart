@@ -465,13 +465,19 @@ class _calendarScreenState extends State<calendarScreen> {
                 key: phoneKey,
                 controller: phoneController,
                 keyboardType: TextInputType.phone,
-                decoration: const InputDecoration(
+                decoration: InputDecoration(
                     filled: true,
                     fillColor: Colors.white,
-                    labelStyle: TextStyle(color: Colors.black),
+                    labelStyle: const TextStyle(color: Colors.black),
                     labelText: 'Phone Number',
-                    border: OutlineInputBorder(),
-                    suffixIcon: Icon(Icons.phone)),
+                    border: const OutlineInputBorder(),
+                    suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() {
+                            phoneController.text = '+64 2035640799';
+                          });
+                        },
+                        icon: const Icon(Icons.phone))),
               ),
               const SizedBox(height: 12),
               TextField(
